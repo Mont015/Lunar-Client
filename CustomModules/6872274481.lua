@@ -1,3 +1,36 @@
+--[[
+      _                           
+     | |   _   _ _ __   __ _ _ __ 
+     | |  | | | | '_ \ / _` | '__|
+     | |__| |_| | | | | (_| | |   
+     |_____\__,_|_| |_|\__,_|_|   
+                              
+
+             | Lunar |
+ 
+      Developers & Credits: 
+	    - Mont
+        - Salad
+		- carrot
+		- maxlasertech
+		- nobitches
+		- Viper
+        - null
+		- blankedvoid
+		- stav
+
+ This is a remake of the old config lunar, since the old lunar config
+ was discontinued, i decided to remake it, everything is
+ brand new some code was given to me with permission and nothing is skidded.
+
+ Not all modules are added yet due to the reason of skids the whole source
+ will be obfuscated sooner or later since we do not want op modules to get 
+ leaked or skidded
+               
+   Join our discord server for updates:
+      https://discord.gg/SWc3DGRGyv
+]]
+
 --This watermark is used to delete the file if its cached, remove it to make the file persist after commits.
 local GuiLibrary = shared.GuiLibrary
 local playersService = game:GetService("Players")
@@ -9312,233 +9345,6 @@ Pay2Code(function()
 end)
 
 run(function()
-    local HackerDetector = {["Enabled"] = false}
-    local refreshFrequency = {["Value"] = 0}
-    local notifyduration = {["Value"] = 15}
-	local AgeCheck = {["Value"] = 10}
-    local speedACheckToggle = {["Enabled"] = false}
-    local speedBCheckToggle = {["Enabled"] = false}
-    local flyACheckToggle = {["Enabled"] = false}
-    local flyBCheckToggle = {["Enabled"] = false}
-	local altCheckToggle = {["Enabled"] = false}
-    local frame = 0
-    local players = {}
-    local lplrname = lplr["Name"]
-    local function highSpeedCheck(plrname)
-        local alreadyDetected = false
-        local pos
-        local newPos
-        local looped = 0
-        local flagged = 0
-        local mag
-        repeat
-            mag = nil
-            pos = nil
-            newPos = nil
-            if not players[plrname]["isAlive"] then 
-                return 
-            end
-            pos = players[plrname]["pos"]
-            newPos = Vector2.new(pos["X"], pos["Z"])
-            task.wait(0.1)
-            mag = (Vector2.new(players[plrname]["pos"]["X"], players[plrname]["pos"]["Z"]) - newPos)["magnitude"] * 8.94
-            if mag >= 35 then
-                flagged += 1
-            end
-            looped += 1
-        until looped >= 25
-        if flagged >= 22 then
-            if detected[plrname] ~= true and players[plrname]["isAlive"] then
-                warningNotification("HackerDetector", plrname .. " is cheating using ScytheDisabler. (Speed: " .. tostring(math.round(mag * 10) / 10) .. ")", notifyduration["Value"])
-                detected[plrname] = true
-            end
-        end
-    end
-    local function verticalPosCheck(plrname)
-        if players[plrname]["pos"]["Y"] > 500 then
-            if detected[plrname] ~= true and players[plrname]["isAlive"] then
-                warningNotification("HackerDetector", plrname .. " is cheating with InfFly. (YPos: " .. tostring(math.round(players[plrname]["pos"]["Y"])) .. ")", notifyduration["Value"])
-                detected[plrname] = true
-            end
-        end
-    end
-	local function AltCheck(plrname)
-		game.Players.PlayerAdded:Connect(function(player)
-			local Age = player.AccountAge
-			if Age < AgeCheck["Value"] then
-				if detected[plrname] ~= true and players[plrname]["isAlive"] then
-				    warningNotification("HackerDetector", plrname .. "Alt detcted account age:" ..Age, notifyduration["Value"])
-				    detected[plrname] = true
-			    end
-		    end
-		end)
-    end
-    local function flyCheck(plrname)
-        local waited = 0
-        local alreadyDetected = false
-        local oldPlayerPosition = players[plrname]["pos"]["Y"]
-        local oldXZ = Vector2.new(players[plrname]["pos"]["X"], players[plrname]["pos"]["Z"])
-        local newplayerposition = nil
-        if bedwarsStore["matchState"] == 1 then
-            repeat
-                task.wait()
-                if players[plrname]["isAlive"] == false then 
-                    return 
-                end
-                if players[plrname]["floor"] ~= Enum.Material.Air and waited < 1.22 then 
-                    return 
-                end
-                waited += frame
-                if waited >= 1.3 and players[plrname]["pos"]["Y"] > oldPlayerPosition - 60 and players[plrname]["pos"]["Y"] < oldPlayerPosition + 50 and (Vector2.new(players[plrname]["pos"]["X"], players[plrname]["pos"]["Z"]) - oldXZ)["magnitude"] > 10 then
-                    if detected[plrname] ~= true and players[plrname]["isAlive"] then
-                        warningNotification("HackerDetector", plrname .. " is cheating by flying. (Time flew: " .. tostring(math.round(waited * 100) / 100) .. "  YDisplacement: " .. tostring(math.round(players[plrname]["pos"]["Y"] - oldPlayerPosition)) .. ")", notifyduration["Value"])
-                        detected[plrname] = true
-                    end
-                end
-            until waited > 1.5
-        end
-    end
-    local connection
-    local deathTPCheck = {}
-    HackerDetector = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"]["CreateOptionsButton"]({
-        ["Name"] = 'HackerDetector',
-        ["HoverText"] = 'Detects blatant cheaters',
-        ["Function"] = function(callback)
-            if callback then
-                task.spawn(function()
-                    repeat
-                        task.wait(refreshFrequency["Value"] / 100)
-                        for _, plr in next, playersService:GetChildren() do
-                            if bedwarsStore["matchState"] == 1 and plr["Name"] ~= lplrname and plr["TeamColor"] ~= lplr["TeamColor"] and plr["Character"] and plr["Character"]["PrimaryPart"] and plr["Character"]:FindFirstChild("Humanoid") and plr["Character"]["Humanoid"]["Health"] > 0 then
-                                players[plr["Name"]] = {
-                                    ["isAlive"] = true,
-                                    ["pos"] = plr["Character"]["PrimaryPart"]["Position"],
-                                    ["floor"] = plr["Character"]["Humanoid"]["FloorMaterial"]
-                                }
-                                if speedACheckToggle["Enabled"] then 
-                                    highSpeedCheck(plr["Name"]) 
-                                end
-                                if flyBCheckToggle["Enabled"] then 
-                                    verticalPosCheck(plr["Name"])
-                                end
-                                if flyACheckToggle["Enabled"] then 
-                                    flyCheck(plr["Name"]) 
-                                end
-								if altCheckToggle["Enabled"] then
-									AltCheck(plr["Name"])
-								end
-                            else
-                                players[plr["Name"]] = {
-                                    ["isAlive"] = false,
-                                    ["pos"] = nil,
-                                    ["floor"] = nil
-                                }
-                            end
-                        end
-                    until not HackerDetector["Enabled"]
-                end)
-                task.spawn(function()
-                    for _, plr in next, playersService:GetPlayers() do
-                        if plr["Name"] ~= lplr["Name"] then
-                            if speedBCheckToggle["Enabled"] then
-                                local con = plr["CharacterAdded"]:Connect(function()
-                                    repeat
-                                        task.wait()
-                                    until plr["Character"] and plr["Character"]:FindFirstChild("Humanoid") and plr["Character"]["PrimaryPart"]
-                                    task.wait(1.8)
-                                    local suc, pos = pcall(function() return plr["Character"]["PrimaryPart"]["Position"] end)
-                                    local newpos = Vector2.new(pos["X"], pos["Z"])
-                                    task.wait(1.8)
-                                    local suc, pos2 = pcall(function() return plr["Character"]["PrimaryPart"]["Position"] end)
-                                    local newpos2 = Vector2.new(pos2["X"], pos2["Z"])
-                                    local mag = (newpos2 - newpos)["magnitude"]
-                                    if mag >= 80 then
-                                        if detected[plr["Name"]] ~= true then
-                                            warningNotification("HackerDetector", plr["Name"] .. " is cheating using DeathTP. (Speed: " .. tostring(math.round(mag * 10) / 10) .. ")", notifyduration["Value"])
-                                            detected[plr["Name"]] = true
-                                        end
-                                    end
-                                end)
-                                table.insert(deathTPCheck, con)
-                            end
-                        end
-                    end
-                end)
-            else
-                for i, v in next, deathTPCheck do
-                    if v["Disconnect"] then
-                        pcall(function() 
-                            v:Disconnect() 
-                        end)
-                        continue
-                    end
-                    if v["disconnect"] then
-                        pcall(function() 
-                            v:disconnect() 
-                        end)
-                        continue
-                    end
-                end
-                table.clear(deathTPCheck)
-                if connection then
-                    connection:Disconnect()
-                end
-            end
-        end
-    })
-    refreshFrequency = HackerDetector["CreateSlider"]({
-        ["Name"] = "Check Cooldown",
-        ["HoverText"] = "Sets how often the checks run (except DeathTP)",
-        ["Min"] = 0,
-        ["Max"] = 100,
-        ["Double"] = 100,
-        ["Default"] = 0,
-        ["Function"] = function() end
-    })
-    notifyduration = HackerDetector["CreateSlider"]({
-        ["Name"] = "Duration",
-        ["HoverText"] = "Duration of the notification",
-        ["Min"] = 0,
-        ["Max"] = 60,
-        ["Default"] = 15,
-        ["Function"] = function() end
-    })
-	AgeCheck = HackerDetector["CreateSlider"]({
-        ["Name"] = "Age Check",
-        ["HoverText"] = "Age to detect alt accounts",
-        ["Min"] = 0,
-        ["Max"] = 50,
-        ["Default"] = 10,
-        ["Function"] = function() end
-    })
-    speedACheckToggle = HackerDetector["CreateToggle"]({
-        ["Name"] = "Disabler",
-        ["Default"] = true,
-        ["Function"] = function(callback) end
-    })
-    speedBCheckToggle = HackerDetector["CreateToggle"]({
-        ["Name"] = "DeathTP",
-        ["Default"] = true,
-        ["Function"] = function(callback) end
-    })
-    flyACheckToggle = HackerDetector["CreateToggle"]({
-        ["Name"] = "Flight",
-        ["Default"] = true,
-        ["Function"] = function(callback) end
-    })
-    flyBCheckToggle = HackerDetector["CreateToggle"]({
-        ["Name"] = "Infinite Fight",
-        ["Default"] = true,
-        ["Function"] = function(callback) end
-    })
-	altCheckToggle = HackerDetector["CreateToggle"]({
-        ["Name"] = "AltDetector",
-        ["Default"] = true,
-        ["Function"] = function(callback) end
-    })
-end)
-
-run(function()
     local AntiDeath = {["Enabled"] = false}
     local JumpBoostMode = {["Value"] = "Velocity"}
     local AntiDeathTrigger = {["Value"] = 50}
@@ -9751,22 +9557,29 @@ run(function()
     local DamageIndicator = {["Enabled"] = false}
     if (not game:IsLoaded()) then game.Loaded:Wait() end
     local IndicatorMessages = {
-        "Thump!";
-        "Pop!";
-        "Bang!";
-        "Smack!";
-        "Hit!";
-        "Pow!";
-        "Bang!";
+        "🎃!";
+        "Holloween!";
+        "Witch!";
+        "Zombie!";
+        "Skeleton!";
+        "Spooky!";
+        "Bloody Hell!";
         "Wham!";
         "Boom!";
+		"Ghost!",
+        "Pumpkin!",
+        "Haunt!",
+		"Mummy!",
+        "Boo!",
+        "Trick or Treat!",
+		"Chills!",
     }
     local IndicatorColor = {
-        Color3.new(0.666667, 0.333333, 1);
-        Color3.new(1, 0.666667, 0);
-        Color3.new(0.666667, 1, 0);
-        Color3.new(1, 0.333333, 1);
-    }
+		Color3.new(0.5, 0, 0.5),
+		Color3.new(1, 0.5, 0),
+		Color3.new(0, 0.5, 0),
+		Color3.new(1, 0, 0.5),
+	}	
     DamageIndicator = GuiLibrary["ObjectsThatCanBeSaved"]["RenderWindow"]["Api"]["CreateOptionsButton"]({
         ["Name"] = "DamageIndicator",
         ["HoverText"] = "Changes the regular indicator text",
@@ -10047,15 +9860,11 @@ run(function()
                         task.wait(RemotesConnectDelay["Value"] / 100)
                     end
                     if RemoteMode["Value"] == "PartyPooper" then
-                        replicatedStorageService['events-@easy-games/game-core:shared/game-core-networking@getEvents.Events'].useAbility:FireServer'PARTY_POPPER'
+                        game:GetService("ReplicatedStorage")["events-@easy-games/game-core:shared/game-core-networking@getEvents.Events"].useAbility:FireServer("PARTY_POPPER")
                     elseif RemoteMode["Value"] == "DragonBreath" then
                         game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("DragonBreath"):FireServer({player = game:GetService("Players").LocalPlayer})
                     elseif RemoteMode["Value"] == "YuziDash" then
                         game:GetService("ReplicatedStorage"):FindFirstChild("events-@easy-games/game-core:shared/game-core-networking@getEvents.Events").useAbility:FireServer("dash")
-                    elseif RemoteMode["Value"] == "Terra" then 
-                        if bedwars.CooldownController:getRemainingCooldown('BLOCK_KICK') == 0 then
-                            bedwars.AbilityController:useAbility('BLOCK_KICK')
-                        end
                     end
                 until not RemotesConnect["Enabled"]
             end
@@ -10066,7 +9875,7 @@ run(function()
         ["List"] = {
             "PartyPooper",
             "DragonBreath",
-            "Terra"
+			"YuziDash"
         },
         ["Function"] = function() end,
     })
@@ -10166,24 +9975,46 @@ run(function()
 end)
 
 run(function()
-    local MultiAura = {}
-    MultiAura = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"]["CreateOptionsButton"]({
-        Name = "MultiAura",
-        HoverText = "Removes the kill feed",
-        Function = function(call)
-            repeat
-               task.wait()
-                 local args = {
-                    [1] = {
-                        ["clientTime"] = tick(),
-                        ["direction"] = game.Players.LocalPlayer.Character.PrimaryPart.CFrame.LookVector,
-                        ["position"] =game.Players.LocalPlayer.Character.PrimaryPart.Position
-                    }
-                }
-                game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("node_modules"):WaitForChild("@rbxts"):WaitForChild("net"):WaitForChild("out"):WaitForChild("_NetManaged"):WaitForChild("SummonerClawAttackRequest"):FireServer(unpack(args))
-            until not game
+    local hackerdetector: vapemodule = {}
+    local hackerdetectordatabase: vapemodule = {}
+    hackerdetector = GuiLibrary["ObjectsThatCanBeSaved"]["UtilityWindow"]["Api"]["CreateOptionsButton"]({
+        Name = 'HackerDetector',
+        HoverText = 'Detects if a cheater is in your game using a speed check.',
+        Function = function(call: boolean)
+            if call then
+                repeat
+                    for i,v in players:GetPlayers() do
+                        if hackerdetectordatabase[v.Name] and not hackerdetectordatabase[v.Name].detected and hackerdetectordatabase[v.Name].magnitude and isAlive(v) then
+                            local newmag = hackerdetectordatabase[v.Name].magnitude - v.Character.HumanoidRootPart.Position.Magnitude;
+                            if newmag < 15 then
+                                hackerdetectordatabase[v.Name].detected = true
+                                warningNotification('Lunar', `{v.DisplayName} is a cheater!`, 7)
+                            else
+                                hackerdetectordatabase[v.Name].magnitude = nil
+                                hackerdetectordatabase[v.Name].position = Vector3.zero
+                            end
+                            --print(`newmag is {newmag}`);
+                            --print(`oldmag is {hackerdetectordatabase[v.Name].magnitude}`)
+                        else
+                            if hackerdetectordatabase[v.Name] and hackerdetectordatabase[v.Name].detected then return end
+                            if isAlive(v) then
+                                if not hackerdetectordatabase[v.Name] then
+                                    hackerdetectordatabase[v.Name] = {}
+                                end
+                                if not hackerdetectordatabase[v.Name].position or hackerdetectordatabase[v.Name].position == Vector3.zero then
+                                    hackerdetectordatabase[v.Name].position = v.Character.PrimaryPart.Position
+                                elseif (not hackerdetectordatabase[v.Name].magnitude or hackerdetectordatabase[v.Name].magnitude == nil) and hackerdetectordatabase[v.Name].position then
+                                    local oldmag = (v.Character.HumanoidRootPart.Position - hackerdetectordatabase[v.Name].position).Magnitude
+                                    hackerdetectordatabase[v.Name].magnitude = oldmag
+                                end
+                            end
+                        end;
+                    end;
+                    task.wait();
+                until (not hackerdetector.Enabled);
+            else
+                table.clear(hackerdetectordatabase);
+            end
         end
     })
 end)
-
-
